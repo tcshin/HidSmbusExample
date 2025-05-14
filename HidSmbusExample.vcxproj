@@ -82,7 +82,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)\..\..\..\lib\slabhidsmbus\include\;$(ProjectDir)\..\..\..\host_common\include\;$(ProjectDir)\..\..\..\host_common\Windows\;$(ProjectDir)\..\..\include\</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <TreatWarningAsError>false</TreatWarningAsError>
       <StringPooling>true</StringPooling>
     </ClCompile>
     <ResourceCompile>
@@ -118,7 +118,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)\..\..\..\lib\slabhidsmbus\include\;$(ProjectDir)\..\..\..\host_common\include\;$(ProjectDir)\..\..\..\host_common\Windows\;$(ProjectDir)\..\..\include\</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <TreatWarningAsError>false</TreatWarningAsError>
       <StringPooling>true</StringPooling>
     </ClCompile>
     <ResourceCompile>

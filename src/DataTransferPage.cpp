@@ -82,7 +82,7 @@ void CDataTransferPage::DoDataExchange(CDataExchange* pDX)
 
 	DDX_Text(pDX, IDC_EDIT_TARGET_ADDRESS, m_targetAddressString);
 	DDX_Text(pDX, IDC_EDIT_RECEIVE_DATA, m_receiveData);
-	//DDX_Text(pDX, IDC_EDIT_READ_KEY, m_receiveData);
+	DDX_Text(pDX, IDC_EDIT1_KEY_VALUE, m_receiveData);
 	DDX_Text(pDX, IDC_EDIT_TRANSMIT_DATA, m_transmitData);
 
 	// Call custom DDX and DDV functions from the CustomDDX module
@@ -149,6 +149,7 @@ void CDataTransferPage::SetDefaults()
 	m_receiveData			= _T("");
 	m_transmitData			= _T("2A");
 	m_writeSlaveAddress		= 0xB8;
+	m_bTimerRunning = FALSE;
 }
 
 // Set control values by getting the device configuration
@@ -257,26 +258,23 @@ void CDataTransferPage::ReadRequest()
 		OutputStatus(_T("HidSmbus_ReadRequest"), status);
 	}
 }
-
 void CDataTransferPage::AddressReadRequest()
 {
 	BYTE targetAddress[HID_SMBUS_MAX_TARGET_ADDRESS_SIZE];
 
-	// Get target address array
 	if (GetTargetAddress(targetAddress))
 	{
 		BOOL opened;
-
-		// Make sure that the device is opened
+		
 		if (HidSmbus_IsOpened(*m_pHidSmbus, &opened) == HID_SMBUS_SUCCESS && opened)
 		{
 			// Issue an address read request
 			HID_SMBUS_STATUS status = HidSmbus_AddressReadRequest(*m_pHidSmbus, m_addressedSlaveAddress, m_addressedBytesToRead, m_targetAddressSize, targetAddress);
-
-			// Output status to status bar
-			// And play an audible alert if the status is not HID_SMBUS_SUCCESS
-			OutputStatus(_T("HidSmbus_AddressReadRequest"), status);
+			//status;
+			//OutputStatus(_T("HidSmbus_ForceReadResponse"), status);
 		}
+		ForceReadResponse();
+		GetReadResponse();
 	}
 }
 
@@ -293,13 +291,16 @@ void CDataTransferPage::ForceReadResponse()
 		// Output status to status bar
 		// And play an audible alert if the status is not HID_SMBUS_SUCCESS
 		OutputStatus(_T("HidSmbus_ForceReadResponse"), status);
+
+	
+	
 	}
 }
 
 void CDataTransferPage::GetReadResponse()
 {
 	BOOL opened;
-
+	static BYTE PreKeyVal;
 	// Make sure that the device is opened
 	if (HidSmbus_IsOpened(*m_pHidSmbus, &opened) == HID_SMBUS_SUCCESS && opened)
 	{
@@ -318,17 +319,26 @@ void CDataTransferPage::GetReadResponse()
 			for (int i = 0; i < numBytesRead; i++)
 			{
 				receiveString.AppendFormat(_T("%02X "), buffer[i]);
+				
+				
 			}
 		}
+		
 
 		m_receiveData = receiveString;
-
+		//SetDlgItemText(IDC_EDIT1_KEY_VALUE, m_receiveData);
+		if (buffer[0] != PreKeyVal) {
+			SetDlgItemText(IDC_EDIT1_KEY_VALUE, m_receiveData);
+			PreKeyVal = buffer[0];
+		}
+		
 		// Read response received successfully
 		if (status == HID_SMBUS_SUCCESS)
 		{
 			// Update status bar text
 			CString statusText;
-			statusText.Format(_T("HidSmbus_GetReadResponse(): %s  Transfer Status: %s  Bytes Read: %u"), HidSmbus_DecodeErrorStatus(status).GetString(), HidSmbus_DecodeTransferStatus(status0).GetString(), numBytesRead);
+			//statusText.Format(_T("HidSmbus_GetReadResponse(): %s  Transfer Status: %s  Bytes Read: %u"), HidSmbus_DecodeErrorStatus(status).GetString(), HidSmbus_DecodeTransferStatus(status0).GetString(), numBytesRead);
+			statusText.Format(_T("%s  : %s  Bytes Read: %u"), HidSmbus_DecodeErrorStatus(status).GetString(), HidSmbus_DecodeTransferStatus(status0).GetString(), numBytesRead);
 			((CHidSmbusExampleDlg*)GetParent())->SetStatusText(statusText);
 		}
 		// Read response failed
@@ -444,6 +454,35 @@ void CDataTransferPage::OutputStatus(CString functionName, HID_SMBUS_STATUS stat
 	}
 }
 
+void CDataTransferPage::OnBnClickedButtonStart()
+{
+	if (!m_bTimerRunning) {
+		SetTimer(1, 50, NULL); // ID: 1, 100ms 간격
+		m_bTimerRunning = TRUE;
+		UpdateData(TRUE);
+	}
+}
+
+void CDataTransferPage::OnBnClickedButtonStop()
+{
+	if (m_bTimerRunning) {
+		KillTimer(1); // ID: 1
+		m_bTimerRunning = FALSE;
+	}
+}
+
+void CDataTransferPage::OnTimer(UINT_PTR nIDEvent)
+{
+	if (nIDEvent == 1) {
+		AddressReadRequest(); // 주기적으로 호출
+		//UpdateData(FALSE);
+	}
+	CDialog::OnTimer(nIDEvent); // 또는 CPropertyPage일 경우 상위 클래스
+}
+
+
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CDataTransferPage - Message Handlers
 /////////////////////////////////////////////////////////////////////////////
@@ -458,6 +497,9 @@ BEGIN_MESSAGE_MAP(CDataTransferPage, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_WRITE_REQUEST, &CDataTransferPage::OnBnClickedButtonWriteRequest)
 	ON_BN_CLICKED(IDC_BUTTON_CANCEL_TRANSFER, &CDataTransferPage::OnBnClickedButtonCancelTransfer)
 	ON_BN_CLICKED(IDC_BUTTON_GET_TRANSFER_STATUS, &CDataTransferPage::OnBnClickedButtonGetTransferStatus)
+	ON_BN_CLICKED(IDC_BUTTON_START, &CDataTransferPage::OnBnClickedButtonStart)
+	ON_BN_CLICKED(IDC_BUTTON_STOP, &CDataTransferPage::OnBnClickedButtonStop)
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 // Override enter and cancel keys so that the property
@@ -485,6 +527,7 @@ void CDataTransferPage::OnBnClickedButtonAddressReadRequest()
 	if (UpdateData(TRUE))
 	{
 		AddressReadRequest();
+		UpdateData(FALSE);
 	}
 }
 

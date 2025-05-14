@@ -98,6 +98,8 @@ BOOL CAboutDlg::OnInitDialog()
 	BYTE minor;
 	BOOL release;
 
+	
+
 	if (HidSmbus_GetLibraryVersion(&major, &minor, &release) == HID_SMBUS_SUCCESS)
 	{
 		CString version;
@@ -111,7 +113,8 @@ BOOL CAboutDlg::OnInitDialog()
 		version.Format(_T("%d.%d%s"), major, minor, (release) ? _T("") : _T(" (Debug)"));
 		SetDlgItemText(IDC_STATIC_HID_LIBRARY_VERSION, version);
 	}
-
+	
+	
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
 }

@@ -63,7 +63,7 @@ protected:
 
 // Message Handlers
 protected:
-	DECLARE_MESSAGE_MAP()
+	
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnBnClickedCancel();
 	afx_msg void OnBnClickedButtonReadRequest();
@@ -73,4 +73,11 @@ protected:
 	afx_msg void OnBnClickedButtonWriteRequest();
 	afx_msg void OnBnClickedButtonCancelTransfer();
 	afx_msg void OnBnClickedButtonGetTransferStatus();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg void OnBnClickedButtonStart();
+	afx_msg void OnBnClickedButtonStop();
+	
+	BOOL m_bTimerRunning;
+
+	DECLARE_MESSAGE_MAP()
 };
